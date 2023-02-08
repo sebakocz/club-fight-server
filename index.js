@@ -6,6 +6,10 @@ const io = require('socket.io')(http, {
     }
 });
 
+const BASE_STATS = {
+    health: 80,
+}
+
 app.get('/', (req, res) => {
     res.send('<h1>Hey Socket.io</h1>');
 });
@@ -22,7 +26,7 @@ io.on('connection', socket => {
             room = { id: socket.id, players: [] };
             rooms.push(room);
         }
-        room.players.push({ id: socket.id, ...player });
+        room.players.push({ id: socket.id, ...player, ...BASE_STATS });
         socket.join(room.id);
         console.log('Player joined room', room.id, room.players);
         if (room.players.length === 2) {

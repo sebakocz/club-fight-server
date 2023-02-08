@@ -47,6 +47,19 @@ io.on('connection', socket => {
             }
         }
     });
+
+    socket.on('attack', (data) => {
+        console.log('attack', data, socket.id);
+        const room = rooms.find(room => room.players.find(player => player.id === socket.id));
+        if (room) {
+            const attacker = room.players.find(player => player.id === socket.id);
+            const defender = room.players.find(player => player.id !== socket.id);
+            const damage = data.damage;
+            defender.health -= damage;
+            console.log(`${attacker.name} attacked ${defender.name} for ${damage} damage`);
+            io.to(room.id).emit('damage', { damage, defender });
+        }
+    });
 });
 
 http.listen(3000, () => {

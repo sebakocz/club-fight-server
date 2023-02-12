@@ -1,17 +1,11 @@
-const app = require('express')();
+require('dotenv').config();
+const express = require('express');
+const app = express();
 const http = require('http').createServer(app);
 const io = require('socket.io')(http, {
     cors: {
         origins: ['http://localhost:8080']
     }
-});
-
-const BASE_STATS = {
-    health: 80,
-}
-
-app.get('/', (req, res) => {
-    res.send('<h1>Hey Socket.io</h1>');
 });
 
 // Store rooms and their player IDs
@@ -26,7 +20,7 @@ io.on('connection', socket => {
             room = { id: socket.id, players: [] };
             rooms.push(room);
         }
-        room.players.push({ id: socket.id, ...player, ...BASE_STATS });
+        room.players.push({ id: socket.id, ...player });
         socket.join(room.id);
         console.log('Player joined room', room.id, room.players);
         if (room.players.length === 2) {
@@ -48,19 +42,21 @@ io.on('connection', socket => {
         }
     });
 
-    socket.on('attack', (data) => {
-        console.log('attack', data, socket.id);
+    socket.on('useItem', (data) => {
+        console.log('useItem', data, socket.id);
         const room = rooms.find(room => room.players.find(player => player.id === socket.id));
         if (room) {
-            const attacker = room.players.find(player => player.id === socket.id);
-            const defender = room.players.find(player => player.id !== socket.id);
-            const damage = data.damage;
-            defender.health -= damage;
-            console.log(`${attacker.name} attacked ${defender.name} for ${damage} damage`);
-            io.to(room.id).emit('damage', { damage, defender });
+            const otherPlayer = room.players.find(player => player.id !== socket.id);
+            io.to(otherPlayer.id).emit('itemUsed', data);
         }
     });
 });
+
+if (!process.env.IS_DEV) {
+    console.log('Serving static files from dist/ folder...');
+    app.use(express.static('dist'));
+    app.use('/assets', express.static('dist/assets'));
+}
 
 http.listen(3000, () => {
     console.log('listening on *:3000');

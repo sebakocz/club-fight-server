@@ -1,4 +1,5 @@
 require('dotenv').config();
+const uuid = require("uuid/v4");
 const express = require('express');
 const app = express();
 const http = require('http').createServer(app);
@@ -17,7 +18,7 @@ io.on('connection', socket => {
     socket.on('join', player => {
         let room = rooms.find(room => room.players.length < 2);
         if (!room) {
-            room = { id: socket.id, players: [] };
+            room = { id: uuid(), players: [] };
             rooms.push(room);
         }
         room.players.push({ id: socket.id, ...player });

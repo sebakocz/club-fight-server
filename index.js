@@ -47,7 +47,9 @@ io.on('connection', socket => {
         if (room) {
             const otherPlayer = room.players.find(player => player.id !== socket.id);
             console.log('useItem', data.item.name, socket.id, '->', otherPlayer.id)
-            io.to(otherPlayer.id).emit('itemUsed', data);
+            if (otherPlayer) {
+                io.to(otherPlayer.id).emit('itemUsed', data);
+            }
         }
     });
 });
